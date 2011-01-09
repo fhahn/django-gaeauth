@@ -17,7 +17,7 @@ class GoogleAccountBackend(ModelBackend):
     in with his Google Account.
     """
 
-    def authenticate(self):
+    def authenticate(self, **credentials):
         g_user = users.get_current_user()
 
         if g_user == None:
