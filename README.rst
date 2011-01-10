@@ -1,20 +1,5 @@
+Django Gaeauth
 =======================
-Setup
-=======================
+An authentication backend, for login via Google Accounts on Google Appengine. Only works on Google App Engine (with Django-nonrel + djangoappengine)
 
- - get the code:
-
-   **hg clone https://fhahn@bitbucket.org/fhahn/django-gaeauth**
-   
- - add the authentication backend (*gaeauth.backends.GoogleAccountBackend*) to settings.py
-   
-   **AUTHENTICATION_BACKENDS = ('gaeauth.backends.GoogleAccountBackend',)**
-
- - include *gaeauth.urls* in your urlconf to *login*, *logout* and *authenticate*
-  
-   for example:
-   
-   **(r'^accounts/', include('gaeauth.urls')),**
-
-   
-   Now you can use */accounts/login/* to use Google Accounts for login and */accounts/logout/* to log out. 
+The latest `documentation <http://readthedocs.org/docs/django-gaeauth/latest/>`_ is available on readthedocs.org
