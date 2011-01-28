@@ -23,21 +23,21 @@ class GoogleAccountBackend(ModelBackend):
         if g_user == None:
             return None
 
-        username = g_user.email().split('@')[0]
+        username = self.clean_username(g_user.email())
 
         if hasattr(settings, 'ALLOWED_USERS'):
             try:
                 settings.ALLOWED_USERS.index(username)
             except ValueError:
                 return None
-            
+
         try:
             user = User.objects.get(password=g_user.user_id())
             if user.email is not g_user.email():
                 user.email = g_user.email()
                 user.username = username
                 user.save()
- 
+
             return user
         except User.DoesNotExist:
                 user = User.objects.create_user(username,\
@@ -48,3 +48,6 @@ class GoogleAccountBackend(ModelBackend):
                     user.is_superuser = True
                 user.save()
                 return user
+
+    def clean_username(self, username):
+        return username.split('@')[0]
