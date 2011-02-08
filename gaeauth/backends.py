@@ -33,7 +33,7 @@ class GoogleAccountBackend(ModelBackend):
 
         try:
             user = User.objects.get(password=g_user.user_id())
-            if user.email is not g_user.email():
+            if user.email != g_user.email():
                 user.email = g_user.email()
                 user.username = username
                 user.save()
