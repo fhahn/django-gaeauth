@@ -31,23 +31,23 @@ class GoogleAccountBackend(ModelBackend):
             except ValueError:
                 return None
 
-        try:
-            user = User.objects.get(password=g_user.user_id())
-            if user.email != g_user.email():
-                user.email = g_user.email()
-                user.username = username
-                user.save()
-
-            return user
-        except User.DoesNotExist:
-                user = User.objects.create_user(username,\
-                                                g_user.email())
-                user.password = g_user.user_id()
-                if users.is_current_user_admin():
-                    user.is_staff = True
-                    user.is_superuser = True
-                user.save()
-                return user
+        user, created = User.objects.get_or_create(password=g_user.user_id())
+        if user.email != g_user.email():
+            # User object was just created, or their username/email has changed
+            # since the last time they authenticated.
+            user.email = g_user.email()
+            user.username = username
+            user.save()
+        if created:
+            user = self.configure_user(user)
+        return user
 
     def clean_username(self, username):
         return username.split('@')[0]
+
+    def configure_user(self, user):
+        if users.is_current_user_admin():
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+        return user
