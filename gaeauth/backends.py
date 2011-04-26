@@ -31,7 +31,9 @@ class GoogleAccountBackend(ModelBackend):
             except ValueError:
                 return None
 
-        user, created = User.objects.get_or_create(password=g_user.user_id())
+        user, created = User.objects.get_or_create(
+            password=g_user.user_id(), defaults={'email': g_user.email(),
+                                                 'username': username})
         if user.email != g_user.email():
             # User object was just created, or their username/email has changed
             # since the last time they authenticated.

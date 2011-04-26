@@ -65,3 +65,10 @@ class GoogleAccountBackendTest(TestCase):
         user = User.objects.get(password=12345)
         self.assertEqual('foo', user.username)
         self.assertEqual('foo@example.com', user.email)
+
+    def test_empty_username_exists(self):
+        """Tests that an existing empty username User does not break backend."""
+        # Regression test for https://bitbucket.org/fhahn/django-gaeauth/issue/1
+        User.objects.create()
+        users.should_receive('get_current_user').and_return(self.g_user)
+        self.assertEqual('foo', auth.authenticate().username)
