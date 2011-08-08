@@ -18,9 +18,9 @@ class GaeauthViewsTest(TestCase):
         settings.AUTHENTICATION_BACKENDS = (
             'gaeauth.backends.GoogleAccountBackend',
         )
-        flexmock(users).should_receive('get_current_user').and_return(
-            users.User(email='foo@example.com', _auth_domain='example.com',
-                       _user_id=12345))
+        self.user = users.User(
+            email='foo@example.com', _auth_domain='example.com', _user_id=12345)
+        flexmock(users).should_receive('get_current_user').and_return(self.user)
 
     def tearDown(self):
         self.testbed.deactivate()
@@ -44,7 +44,7 @@ class GaeauthViewsTest(TestCase):
                      response['Location'])
 
     def test_logout(self):
-        self.client.login()
+        self.client.login(user=self.user)
         self.assert_(SESSION_KEY in self.client.session)
         response = self.client.get('/gaeauth/logout/')
         self.assertEqual(response.status_code, 302)

@@ -30,6 +30,7 @@ class GoogleRemoteUserMiddlewareTest(TestCase):
         the App Engine users API.
         """
         num_users = User.objects.count()
+        users.should_receive('get_current_user').and_return(None)
         response = self.client.get('/remote_user/')
         self.assertTrue(response.context['user'].is_anonymous())
         self.assertEqual(User.objects.count(), num_users)

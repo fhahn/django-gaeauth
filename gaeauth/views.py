@@ -24,7 +24,8 @@ def logout(request):
 
 
 def authenticate(request):
-    user = django_authenticate()
+    user = django_authenticate(
+        user=users.get_current_user(), admin=users.is_current_user_admin())
     if user is not None:
         django_login(request, user)
         #redirect to valid logged page (preferably the user's request)
