@@ -34,6 +34,14 @@ class GoogleAccountBackendTest(TestCase):
         self.assertEqual('bar', auth.authenticate().username)
         del settings.ALLOWED_USERS
 
+    def test_allowed_domains(self):
+        """Tests when user has supplied an ALLOWED_DOMAINS settings entry."""
+        settings.ALLOWED_DOMAINS = ('fail.example.com',)
+        self.assertIsNone(auth.authenticate())
+        settings.ALLOWED_DOMAINS = ('example.com',)
+        self.assertEqual('foo', auth.authenticate().username)
+        del settings.ALLOWED_DOMAINS
+
     def test_configure_user(self):
         """Tests that App Engine admin User object gets staff/superuser."""
         users.should_receive('is_current_user_admin').and_return(True)

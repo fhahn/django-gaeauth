@@ -23,12 +23,13 @@ class GoogleAccountBackend(ModelBackend):
         if g_user == None:
             return None
 
-        username = self.clean_username(g_user.email())
+        username, domain = g_user.email().split('@')
 
-        if hasattr(settings, 'ALLOWED_USERS'):
-            try:
-                settings.ALLOWED_USERS.index(username)
-            except ValueError:
+        # Check for settings whitelists.
+        for setting, value in (('ALLOWED_USERS', username),
+                               ('ALLOWED_DOMAINS', domain)):
+            if (hasattr(settings, setting) and
+                value not in getattr(settings, setting)):
                 return None
 
         user, created = User.objects.get_or_create(
