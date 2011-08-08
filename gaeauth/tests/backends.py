@@ -12,27 +12,25 @@ class GoogleAccountBackendTest(TestCase):
         settings.AUTHENTICATION_BACKENDS = (
             'gaeauth.backends.GoogleAccountBackend',
         )
-        self.g_user = users.User(
+        g_user = users.User(
             email='foo@example.com', _auth_domain='example.com', _user_id=12345)
-        flexmock(users)
+        flexmock(users).should_receive('get_current_user').and_return(g_user)
 
     def test_clean_username(self):
         backend = GoogleAccountBackend()
         self.assertEqual('foo', backend.clean_username('foo@example.com'))
 
     def test_authenticate(self):
-        users.should_receive('get_current_user').and_return(self.g_user)
         user = auth.authenticate()
         self.assertEqual('foo', user.username)
 
     def test_allowed_users(self):
         """Tests for when user has supplied an ALLOWED_USERS settings entry."""
         settings.ALLOWED_USERS = ('bar',)
+        self.assertIsNone(auth.authenticate())
         g_user2 = users.User(
             email='bar@example.com', _auth_domain='example.com', _user_id=67890)
-        users.should_receive('get_current_user').and_return(
-            self.g_user).and_return(g_user2)
-        self.assertIsNone(auth.authenticate())
+        users.should_receive('get_current_user').and_return(g_user2)
         self.assertEqual('bar', auth.authenticate().username)
         del settings.ALLOWED_USERS
 
@@ -48,7 +46,6 @@ class GoogleAccountBackendTest(TestCase):
 
     def test_email_change(self):
         """Tests that user's email and username are properly updated."""
-        users.should_receive('get_current_user').and_return(self.g_user)
         User.objects.create(
             username='old', email='old@example.com', password=12345)
         auth.authenticate()
@@ -60,5 +57,4 @@ class GoogleAccountBackendTest(TestCase):
         """Tests that an existing empty username User does not break backend."""
         # Regression test for https://bitbucket.org/fhahn/django-gaeauth/issue/1
         User.objects.create()
-        users.should_receive('get_current_user').and_return(self.g_user)
         self.assertEqual('foo', auth.authenticate().username)
