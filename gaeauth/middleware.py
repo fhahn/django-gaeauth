@@ -1,14 +1,15 @@
+from google.appengine.api import oauth
 from google.appengine.api import users
 from django.contrib import auth
 from django.contrib.auth.middleware import RemoteUserMiddleware
 
 
-class GoogleRemoteUserMiddleware(RemoteUserMiddleware):
+class BaseGoogleRemoteUserMiddleware(RemoteUserMiddleware):
     def get_current_user(self):
-        return users.get_current_user()
+        raise NotImplementedError
 
     def is_current_user_admin(self):
-        return users.is_current_user_admin()
+        raise NotImplementedError
 
     def process_request(self, request):
         user = self.get_current_user()
@@ -31,3 +32,26 @@ class GoogleRemoteUserMiddleware(RemoteUserMiddleware):
             # by logging the user in.
             request.user = user
             auth.login(request, user)
+
+
+class GoogleRemoteUserMiddleware(BaseGoogleRemoteUserMiddleware):
+    def get_current_user(self):
+        return users.get_current_user()
+
+    def is_current_user_admin(self):
+        return users.is_current_user_admin()
+
+
+class GoogleOAuthRemoteUserMiddleware(BaseGoogleRemoteUserMiddleware):
+    def get_current_user(self):
+        try:
+            return oauth.get_current_user()
+        except oauth.Error:
+            return None
+
+    def is_current_user_admin(self):
+        try:
+            return oauth.is_current_user_admin()
+        except oauth.Error:
+            return False
+
