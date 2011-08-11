@@ -17,38 +17,45 @@ class GoogleAccountBackend(ModelBackend):
     in with his Google Account.
     """
 
-    def authenticate(self, **credentials):
-        g_user = users.get_current_user()
+    def authenticate(self, user=None, admin=False, **credentials):
+        """Authenticate the given user.
 
-        if g_user == None:
+        Args:
+          user: The google.appengine.api.users.User object representing the
+              current App Engine user.
+          admin: Whether the current user is an developer/admin of the
+              application.
+        """
+        if user is None:
             return None
 
-        username = self.clean_username(g_user.email())
+        username, domain = user.email().split('@')
 
-        if hasattr(settings, 'ALLOWED_USERS'):
-            try:
-                settings.ALLOWED_USERS.index(username)
-            except ValueError:
+        # Check for settings whitelists.
+        for setting, value in (('ALLOWED_USERS', username),
+                               ('ALLOWED_DOMAINS', domain)):
+            if (hasattr(settings, setting) and
+                value not in getattr(settings, setting)):
                 return None
 
-        user, created = User.objects.get_or_create(
-            password=g_user.user_id(), defaults={'email': g_user.email(),
-                                                 'username': username})
-        if user.email != g_user.email():
+        django_user, created = User.objects.get_or_create(
+            password=user.user_id(), defaults={'email': user.email(),
+                                               'username': username})
+        if django_user.email != user.email():
             # User object was just created, or their username/email has changed
             # since the last time they authenticated.
-            user.email = g_user.email()
-            user.username = username
-            user.save()
+            django_user.email = user.email()
+            django_user.username = username
+            django_user.save()
         if created:
-            user = self.configure_user(user)
-        return user
+            django_user = self.configure_user(django_user, admin)
+        return django_user
 
     def clean_username(self, username):
         return username.split('@')[0]
 
-    def configure_user(self, user):
-        if users.is_current_user_admin():
+    def configure_user(self, user, admin):
+        if admin:
             user.is_staff = True
             user.is_superuser = True
             user.save()
