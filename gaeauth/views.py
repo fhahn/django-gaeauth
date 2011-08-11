@@ -1,21 +1,19 @@
 from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
 from django.contrib.auth import login as django_login, \
     authenticate as django_authenticate, logout as django_logout, \
     REDIRECT_FIELD_NAME
 
 from google.appengine.api import users
 
+from .utils import get_google_login_url
 
 # redirects to the google user api generated login url
 def login(request, redirect_field_name=REDIRECT_FIELD_NAME):
     redirect_to = request.REQUEST.get(redirect_field_name, '')
     if not redirect_to or '//' in redirect_to or ' ' in redirect_to:
         redirect_to = '/'
-    return HttpResponseRedirect(users.create_login_url(
-            '%s?%s=%s' % (reverse('google_authenticate'), REDIRECT_FIELD_NAME,
-                          redirect_to)))
-
+    return HttpResponseRedirect(get_google_login_url(redirect_field_name,
+                                                     redirect_to))
 
 # redirects to the google user api generated login url
 def logout(request):
