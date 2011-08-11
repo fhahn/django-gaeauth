@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.contrib.auth import SESSION_KEY
 from django.core.urlresolvers import reverse
@@ -14,6 +16,14 @@ from ..utils import get_google_login_url
 class GaeauthViewsTest(TestCase):
     urls = 'gaeauth.tests.urls'
 
+    def fake_login_user(self, email, user_id, is_admin=False):
+        os.environ['USER_EMAIL'] = email or ''
+        os.environ['USER_ID'] = user_id or ''
+        os.environ['USER_IS_ADMIN'] = '1' if is_admin else '0'
+
+    def fake_logout_user(self):
+        self.fake_login_user(None, None)
+
     def setUp(self):
         self.testbed = testbed.Testbed()
         self.testbed.activate()
@@ -27,7 +37,6 @@ class GaeauthViewsTest(TestCase):
         )
         self.user = users.User(
             email='foo@example.com', _auth_domain='example.com', _user_id=12345)
-        flexmock(users).should_receive('get_current_user').and_return(self.user)
 
     def tearDown(self):
         self.testbed.deactivate()
@@ -63,13 +72,13 @@ class GaeauthViewsTest(TestCase):
 
     def test_authenticate(self):
         self.assert_(SESSION_KEY not in self.client.session)
+        self.fake_login_user('foo@example.com', '123456')
         response = self.client.get(self.authenticate_url, {'next': '/foo'})
         self.assert_(SESSION_KEY in self.client.session)
         self.assertEqual(response.status_code, 302)
         self.assert_('/foo' in response['Location'])
 
     def test_authenticate_when_django_auth_fails(self):
-        users.should_receive('get_current_user').and_return(None)
         response = self.client.get(self.authenticate_url, {'next': '/foo'})
         self.assertEqual(response.status_code, 302)
         self.assert_('/invalid' in response['Location'])
