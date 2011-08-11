@@ -1,12 +1,15 @@
-import urllib
-
 from django.conf import settings
 from django.contrib.auth import SESSION_KEY
+from django.core.urlresolvers import reverse
+from django.contrib.auth import   REDIRECT_FIELD_NAME
 from django.test import TestCase
+
 from google.appengine.api import users
 from google.appengine.ext import testbed
+
 from flexmock import flexmock
 
+from ..utils import get_google_login_url
 
 class GaeauthViewsTest(TestCase):
     urls = 'gaeauth.tests.urls'
@@ -15,6 +18,10 @@ class GaeauthViewsTest(TestCase):
         self.testbed = testbed.Testbed()
         self.testbed.activate()
         self.testbed.init_user_stub()
+        self.login_url = reverse('google_login')
+        self.logout_url = reverse('google_logout')
+        self.authenticate_url = reverse('google_authenticate')
+
         settings.AUTHENTICATION_BACKENDS = (
             'gaeauth.backends.GoogleAccountBackend',
         )
@@ -25,40 +32,45 @@ class GaeauthViewsTest(TestCase):
     def tearDown(self):
         self.testbed.deactivate()
 
+    def get_google_login_url(self, next):
+        '''
+        calls gaeauth.utils.get_google_login_url with REDIRECT_FIELD_NAME
+        parameter
+        '''
+        return get_google_login_url(REDIRECT_FIELD_NAME, next)
+
     def test_login_with_invalid_next_param(self):
-        response = self.client.get('/gaeauth/login/')
+        response = self.client.get(self.login_url)
         self.assertEqual(response.status_code, 302)
-        self.assert_(urllib.quote('/gaeauth/authenticate/?next=/') in
-                     response['Location'])
-        response = self.client.get('/gaeauth/login/', {'next': 'http://host'})
-        self.assert_(urllib.quote('/gaeauth/authenticate/?next=/') in
-                     response['Location'])
-        response = self.client.get('/gaeauth/login/', {'next': '/space path'})
-        self.assert_(urllib.quote('/gaeauth/authenticate/?next=/') in
-                     response['Location'])
-
+        self.assertEquals(self.get_google_login_url('/'), response['Location'])
+        response = self.client.get(self.login_url, {'next': 'http://host'})
+        self.assertEquals(self.get_google_login_url('/'), response['Location'])
+        response = self.client.get(self.login_url, {'next': '/space path'})
+        self.assertEquals(self.get_google_login_url('/'), response['Location'])
+ 
     def test_login_with_valid_next_param(self):
-        response = self.client.get('/gaeauth/login/', {'next': '/foo'})
+        response = self.client.get(self.login_url, {'next': '/foo'})
         self.assertEqual(response.status_code, 302)
-        self.assert_(urllib.quote('/gaeauth/authenticate/?next=/foo') in
-                     response['Location'])
-
+        self.assertEquals(self.get_google_login_url('/foo'),
+                          response['Location'])
+            
     def test_logout(self):
         self.client.login(user=self.user)
         self.assert_(SESSION_KEY in self.client.session)
-        response = self.client.get('/gaeauth/logout/')
+        response = self.client.get(self.logout_url)
         self.assertEqual(response.status_code, 302)
         self.assert_(SESSION_KEY not in self.client.session)
 
     def test_authenticate(self):
         self.assert_(SESSION_KEY not in self.client.session)
-        response = self.client.get('/gaeauth/authenticate/', {'next': '/foo'})
+        response = self.client.get(self.authenticate_url, {'next': '/foo'})
         self.assert_(SESSION_KEY in self.client.session)
         self.assertEqual(response.status_code, 302)
         self.assert_('/foo' in response['Location'])
 
     def test_authenticate_when_django_auth_fails(self):
         users.should_receive('get_current_user').and_return(None)
-        response = self.client.get('/gaeauth/authenticate/', {'next': '/foo'})
+        response = self.client.get(self.authenticate_url, {'next': '/foo'})
         self.assertEqual(response.status_code, 302)
         self.assert_('/invalid' in response['Location'])
+        
