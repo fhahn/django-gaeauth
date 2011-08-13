@@ -2,20 +2,29 @@ from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.models import User
 from django.test import TestCase
-from flexmock import flexmock
-from gaeauth.backends import GoogleAccountBackend
+
 from google.appengine.api import users
 
+from gaeauth.backends import GoogleAccountBackend
+from gaeauth.tests.gae import GaeUserApiTestMixin
 
-class GoogleAccountBackendTest(TestCase):
+
+class GoogleAccountBackendTest(GaeUserApiTestMixin, TestCase):
     def setUp(self):
+        super(GoogleAccountBackendTest, self).setUp()
         settings.AUTHENTICATION_BACKENDS = (
             'gaeauth.backends.GoogleAccountBackend',
         )
+        self.email = 'foo@example.com'
+        self.auth_domain = 'example.com'
+        self.user_id = '12345'
         self.user = users.User(
-            email='foo@example.com', _auth_domain='example.com', _user_id=12345)
+            email=self.email, _auth_domain=self.auth_domain,
+            _user_id=self.user_id)
+        
 
     def test_clean_username(self):
+        self.login_user(self.email, self.user_id)
         backend = GoogleAccountBackend()
         self.assertEqual('foo', backend.clean_username('foo@example.com'))
 
@@ -63,3 +72,4 @@ class GoogleAccountBackendTest(TestCase):
         # Regression test for https://bitbucket.org/fhahn/django-gaeauth/issue/1
         User.objects.create()
         self.assertEqual('foo', auth.authenticate(user=self.user).username)
+

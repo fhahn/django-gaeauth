@@ -1,5 +1,3 @@
-import os
-
 from django.conf import settings
 from django.contrib.auth import SESSION_KEY
 from django.core.urlresolvers import reverse
@@ -7,27 +5,15 @@ from django.contrib.auth import   REDIRECT_FIELD_NAME
 from django.test import TestCase
 
 from google.appengine.api import users
-from google.appengine.ext import testbed
 
-from flexmock import flexmock
+from gaeauth.tests.gae import GaeUserApiTestMixin
+from gaeauth.utils import get_google_login_url
 
-from ..utils import get_google_login_url
-
-class GaeauthViewsTest(TestCase):
+class GaeauthViewsTest(GaeUserApiTestMixin, TestCase):
     urls = 'gaeauth.tests.urls'
 
-    def fake_login_user(self, email, user_id, is_admin=False):
-        os.environ['USER_EMAIL'] = email or ''
-        os.environ['USER_ID'] = user_id or ''
-        os.environ['USER_IS_ADMIN'] = '1' if is_admin else '0'
-
-    def fake_logout_user(self):
-        self.fake_login_user(None, None)
-
     def setUp(self):
-        self.testbed = testbed.Testbed()
-        self.testbed.activate()
-        self.testbed.init_user_stub()
+        super(GaeauthViewsTest, self).setUp()
         self.login_url = reverse('google_login')
         self.logout_url = reverse('google_logout')
         self.authenticate_url = reverse('google_authenticate')
@@ -37,9 +23,6 @@ class GaeauthViewsTest(TestCase):
         )
         self.user = users.User(
             email='foo@example.com', _auth_domain='example.com', _user_id=12345)
-
-    def tearDown(self):
-        self.testbed.deactivate()
 
     def get_google_login_url(self, next):
         '''
@@ -72,7 +55,7 @@ class GaeauthViewsTest(TestCase):
 
     def test_authenticate(self):
         self.assert_(SESSION_KEY not in self.client.session)
-        self.fake_login_user('foo@example.com', '123456')
+        self.login_user('foo@example.com', '123456')
         response = self.client.get(self.authenticate_url, {'next': '/foo'})
         self.assert_(SESSION_KEY in self.client.session)
         self.assertEqual(response.status_code, 302)
