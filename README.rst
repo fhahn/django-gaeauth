@@ -9,16 +9,16 @@ It only works on Google App Engine and you will also need the Djangoappengine ba
 Installation
 ====================================
 
-get the code:
+* get the code:
 
     git clone https://fhahn@github.com/fhahn/django-gaeauth.git
    
 
 
-add **gaeauth.backends.GoogleAccountBackend** to your *AUTHENTICATION_BACKENDS* 
-and **gaeauth** to your *INSTALLED_APPS*
+* add **gaeauth.backends.GoogleAccountBackend** to your *AUTHENTICATION_BACKENDS* 
+  and **gaeauth** to your *INSTALLED_APPS*
 
-settings.py::
+  settings.py::
 
     AUTHENTICATION_BACKENDS = (
           ...
@@ -31,9 +31,9 @@ settings.py::
     )
 
 
-include **gaeauth.urls** in your urlconf to **login**, **logout** and **authenticate**
+* include **gaeauth.urls** in your urlconf to **login**, **logout** and **authenticate**
   
-urls.py::
+  urls.py::
    
     urlpatterns = patterns('',
          ...
