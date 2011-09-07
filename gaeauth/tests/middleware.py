@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 
 from gaeauth.tests.gae import GaeUserApiTestMixin
+from gaeauth.tests.gae import GaeOauthUserApiTestMixin
 
 
 class GoogleRemoteUserMiddlewareTest(GaeUserApiTestMixin, TestCase):
@@ -56,7 +57,7 @@ class GoogleRemoteUserMiddlewareTest(GaeUserApiTestMixin, TestCase):
         num_users = User.objects.count()
         self.login_user(self.email, '12345')
         response = self.client.get('/remote_user/')
-        
+
         self.assertEqual(response.context['user'].username, 'user')
         self.assertEqual(User.objects.count(), num_users)
 
@@ -69,12 +70,9 @@ class GoogleRemoteUserMiddlewareTest(GaeUserApiTestMixin, TestCase):
         self.assertEqual(User.objects.count(), num_users + 1)
 
 
-# GoogleOauthRemoteUserMiddleware test disabled, because the testbed user_stub
-# does not support setting different users via environment variables
-'''
-class GoogleOAuthRemoteUserMiddlewareTest(GoogleRemoteUserMiddlewareTest, GaeOauthUserApiTestCase):
+class GoogleOAuthRemoteUserMiddlewareTest(GaeOauthUserApiTestMixin,
+                                          GoogleRemoteUserMiddlewareTest):
     middleware = 'gaeauth.middleware.GoogleOAuthRemoteUserMiddleware'
-
 
     def test_no_google_user(self):
         """
@@ -86,4 +84,3 @@ class GoogleOAuthRemoteUserMiddlewareTest(GoogleRemoteUserMiddlewareTest, GaeOau
         response = self.client.get('/remote_user/')
         self.assertTrue(response.context['user'].is_anonymous())
         self.assertEqual(User.objects.count(), num_users)
-'''

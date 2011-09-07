@@ -1,3 +1,4 @@
+from google.appengine.api import user_service_pb
 from google.appengine.ext import testbed
 
 
@@ -22,11 +23,16 @@ class GaeUserApiTestMixin(object):
         self.testbed.deactivate()
 
 
-class GaeOauthUserApiTestMixin(GaeUserApiTestMixin):    
+class GaeOauthUserApiTestMixin(GaeUserApiTestMixin):
     def login_user(self, email, user_id, is_admin=False):
+        self.testbed.setup_env(oauth_error_code='', overwrite=True)
         self.testbed.setup_env(oauth_email=email, overwrite=True)
         self.testbed.setup_env(oauth_user_id=user_id or '', overwrite=True)
         self.testbed.setup_env(oauth_auth_domain='example.com',
                                overwrite=True)
         self.testbed.setup_env(oauth_is_admin='1' if is_admin else '0',
                                overwrite=True)
+
+    def logout_user(self):
+        error_code = user_service_pb.UserServiceError.OAUTH_INVALID_REQUEST
+        self.testbed.setup_env(oauth_error_code=error_code, overwrite=True)
