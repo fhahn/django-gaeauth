@@ -1,5 +1,6 @@
 from google.appengine.api import oauth
 from google.appengine.api import users
+from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.middleware import RemoteUserMiddleware
 
@@ -45,7 +46,8 @@ class GoogleRemoteUserMiddleware(BaseGoogleRemoteUserMiddleware):
 class GoogleOAuthRemoteUserMiddleware(BaseGoogleRemoteUserMiddleware):
     def get_current_user(self):
         try:
-            return oauth.get_current_user()
+            scope = getattr(settings, 'REMOTE_USER_OAUTH_SCOPE', None)
+            return oauth.get_current_user(_scope=scope)
         except oauth.Error:
             return None
 
