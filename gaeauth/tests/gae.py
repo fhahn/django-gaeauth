@@ -35,4 +35,4 @@ class GaeOauthUserApiTestMixin(GaeUserApiTestMixin):
 
     def logout_user(self):
         error_code = user_service_pb.UserServiceError.OAUTH_INVALID_REQUEST
-        self.testbed.setup_env(oauth_error_code=error_code, overwrite=True)
+        self.testbed.setup_env(oauth_error_code=str(error_code), overwrite=True)
