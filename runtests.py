@@ -16,7 +16,7 @@ def runtests(args):
           'gaeauth',
       ),
       ROOT_URLCONF='urls')
-  management.call_command('test', *args)
+  management.call_command('test', 'gaeauth', *args)
 
 
 if __name__ == '__main__':
