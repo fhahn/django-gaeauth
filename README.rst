@@ -1,6 +1,9 @@
 Django Gaeauth
 =======================
 
+.. image:: https://travis-ci.org/fhahn/django-gaeauth.svg?branch=master
+   :target: https://travis-ci.org/fhahn/django-gaeauth
+
 An Django authentication backend for using the Google App Engine Users_ and Oauth_ API for user login/logout.
 
 It only works on Google App Engine and you will also need the Djangoappengine backend for Django-Nonrel_.
